@@ -1,33 +1,72 @@
-FLOWGEN SOFTWARE PREREQUISITES:
-=====
+## Updates
+===================================================================================
+- recursive implementation of node processing to enable deeper level of nesting
+  (PlantUML however does not support high level nesting of ifs, therefore big switches are implemented by switch)
+- implemented loops (while, for, do while)
+- implemented switch statement with case, default and break (restricted to well formed cases with break at the end)
+- implemented support of constructors and destructors (linking to destructor still to do)
+- changed handling of partitions to keep diagrams small
 
-• Python3 
+### Hints for usage
+Flowgen comments must be first in line, e.g. the following will not work:
+
+    if (x <10)
+    { //$ This comment will not be processed by Flowgen
+      x=10;
+    }
+
+this is ok:
+
+    if (x <10)
+    { 
+      //$ This comment be processed by Flowgen
+      x=10;
+    }
+
+- if flowgen produces queer results or does not put the comments at the correct branch, check for compilation errors
+  - Flowgen produces some limited diagnostics from CLang at begin of the output processing of each compilation unit
+  - check for missing declarations because of missing header files
+  - For each processed function, Flowgen produces a node-tree. If some parts of the code are missing in that tree, 
+    CLang stopped compilation because of some missing declaration or syntax error
+  - including full header files from Cygwin or MinGW may cause problems. Reduced header files as in Flowgen/Flogen/inc will do.
+
+
+- Comments in code excluded by if def are nevertheless processed, if the function is included in compilation
+- if you need some special code for flowgen use define `__has_include`:
+
+    #if defined(__has_include) // for Flowgen
+    #include stdio.h
+    #endif
+
+===================================================================================
+## FLOWGEN SOFTWARE PREREQUISITES:
+
+- Python3 
 http://www.python.org/getit/
 
-• PlantUML (already provided; NO need to install)
+- PlantUML (already provided; NO need to install)
 http://plantuml.sourceforge.net/
 
-• LLVM-Clang 3.1 (or superior) 
+- LLVM-Clang 16.0 (or superior) 
 http://clang.llvm.org/
 
-• Clang-Python3 bindings (already provided+fixed some bugs; NO need to install)
-https://github.com/kennytm/clang-cindex-python3
+- Clang-Python3 bindings (tested with v16.0.1.1)
+https://pypi.org/project/clang/
 
 
-ACKNOWLEDGMENTS:
-=====
+### ACKNOWLEDGMENTS:
+
 Thanks to the PlantUML team, specially to Arnaud Roques; to cldoc’s developer, Jesse Van Den Kieboom; 
 and to the big LLVM+Clang developer community. This tool would not be possible without them.
 
 
-INSTALLATION:
-=====
+## INSTALLATION:
 
 [FOR UNIX-LIKE SYSTEMS: MAC/LINUX]
 
 - Install Python3 (if not present)
 
-- Install LLVM+Clang 3.1 (or superior). 
+- Install LLVM+Clang 16.0 (or superior). 
 
 For MAC, you may try using a package management solution such as MacPorts or Fink.
 For Linux (type?), you may try using a package management solution such as…
@@ -36,7 +75,7 @@ LLVM+Clang pre-built binaries are available from
 http://llvm.org/releases/download.html
 
 After installation, the environment variable
-$LD_LIBRARY_PATH=path_to_llvm/lib
+`LD_LIBRARY_PATH=<path/to/llvm-project/build>/lib`
 pointing to the libraries should have been set, or it can be set manually.
 That folder contains required library files such as "libclang.dylib". 
 
@@ -45,9 +84,9 @@ That folder contains required library files such as "libclang.dylib".
 
 [FOR WINDOWS]
 
-- Install Python3 (does not seem to work with a portable version, needs a normal installation)
+- Install Python3 (if not present)
 
-- Install LLVM+Clang 3.1 (or superior). 
+- Install LLVM+Clang 16.0 (or superior). 
 
 Prebuilt binaries available (3.4 or superior) from
 http://llvm.org/releases/download.html
@@ -55,14 +94,27 @@ Choose the option 'Add LLVM to system PATH for all users’
 
 - Download Flowgen from GitHub.
 
+### TROUBLESHOOTING
 
+- If during the execution you get the error that `libclang` is missing despite `LD_LIBRARY_PATH` being defined per instructions above, try creating a symling with the requested name. For example, in case you get 
 
-CONFIGURING AND RUNNING FLOWGEN:
-=====
+    ````
+    OSError: libclang-16.so: cannot open shared object file: No such file or directory
+    ```
 
-There is an example in the folder EXAMPLE, with some C++ code. 
+    Try `sudo ln -s <path/to/llvm-project/build>/lib/libclang.so.16.0.0 <path/to/llvm-project/build>/lib/libclang-16.so`.
 
-[FOR UNIX-LIKE SYSTEMS: MAC/LINUX]
+- If you get the error about missing system includes, add the path to the headers' location inside LLVM project to the command under execution. For example,
+
+    ```
+    python3 build_db.py example/simple_demo_src.cpp -I<path/to/llvm-project/build>/lib/clang/<version>/include
+    ```
+
+## CONFIGURING AND RUNNING FLOWGEN:
+
+There is an example in the folder EXAMPLE, with some C++ code.
+
+### FOR UNIX-LIKE SYSTEMS: MAC/LINUX
 
 The makefile is configured to either compile the sample program, by typing
 > make a.out
@@ -79,7 +131,13 @@ Note [MAC SPECIFIC]: by default, makefiles are not recognized on Mac systems. In
 
 The //$ annotations and the code can be changed in the test C++ code to experiment with Flowgen.
 
-[FOR WINDOWS]
+**TLDR**: 
+
+- adjust the `INCLUDES` variable in the `Makefile`.
+- execute `rm -rf flowdoc` to make sure the directory does not already exist.
+- execute `make flowdoc 1> stdout_log.txt 2> stderr_log.txt`. The results can be found inside `flowdoc`. The standard output and errors are redirected to `stdout_log.txt` and `stderr_log.txt`, respectively.
+
+### FOR WINDOWS
 
 Set FLOWGEN_DIR environment variable to the FLOWGEN folder
 The make batch file ‘make_WIN.bat’ is configured to run the example
@@ -93,9 +151,9 @@ The //$ annotations and the code can be changed in the test C++ code to experime
 
 
 
-MAP OF FILES
-=====
+## MAP OF FILES
 
+```
 build_db.py —> Flowgen Python3 executable
 makeflows.py —> Flowgen Python3 executable
 makehtml.py —> Flowgen Python3 executable
@@ -125,6 +183,5 @@ example/  —> FOLDER with sample application
                              - PlantUML diagram-descriptions (*.txt)  
                                (they can be used as input to PlantUML)
 
-
-
+```
 
