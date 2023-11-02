@@ -8,8 +8,7 @@
 - changed handling of partitions to keep diagrams small
 
 ### Hints for usage
-- Flowgen comments must be first in line, e.g. the following will not work:
-
+Flowgen comments must be first in line, e.g. the following will not work:
 
     if (x <10)
     { //$ This comment will not be processed by Flowgen
@@ -154,6 +153,7 @@ The //$ annotations and the code can be changed in the test C++ code to experime
 
 ## MAP OF FILES
 
+```
 build_db.py —> Flowgen Python3 executable
 makeflows.py —> Flowgen Python3 executable
 makehtml.py —> Flowgen Python3 executable
@@ -183,5 +183,5 @@ example/  —> FOLDER with sample application
                              - PlantUML diagram-descriptions (*.txt)  
                                (they can be used as input to PlantUML)
 
-
+```
 
