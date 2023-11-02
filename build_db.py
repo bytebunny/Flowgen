@@ -32,6 +32,12 @@ def get_referenced(self):
 clang.cindex.Cursor.get_referenced = get_referenced
 
 
+#print out a node with kind
+def print_nodeK(context_str, node):
+     node_str =' '.join(t.spelling for t in list(node.get_tokens())[0:20]) 
+     print(context_str, node.kind.name, node_str[:80])
+     return
+
 #looks for an action comment inside the extent of a given node (write_zoomlevel <= diagram_zoom)
 def lookfor_ActionComment_in_node(nodeIN,diagram_zoom):
     
@@ -41,7 +47,7 @@ def lookfor_ActionComment_in_node(nodeIN,diagram_zoom):
        regextextActionComment_zoom=r'^\s*//\$'+str(zoom)+r'(?!\s+\[)\s+(?P<action>.+)$'
        return re.compile(regextextActionComment_zoom)       
 
-    infile_str=nodeIN.location.file.name.decode("utf-8")
+    infile_str=nodeIN.location.file.name
     infile= open(infile_str,'r')            
     start_line=nodeIN.extent.start.line
     end_line=nodeIN.extent.end.line
@@ -75,7 +81,7 @@ def lookfor_actionAnnotation_inNode(nodeIN,zoom):
     ##regextextAnyActionComment1=r'^\s*//\$1?(?!\s+\[)\s+(?P<action>.+)$'
 
           
-    infile_str=nodeIN.location.file.name.decode("utf-8")
+    infile_str=nodeIN.location.file.name
     infile= open(infile_str,'r')            
     start_line=nodeIN.extent.start.line
     end_line=nodeIN.extent.end.line
@@ -94,10 +100,11 @@ def lookfor_actionAnnotation_inNode(nodeIN,zoom):
 def find_functions(node):
   
   global writefunc, relevant_folder
+  #print_nodeK('find_functions', node);
   if node.kind.is_declaration():
      #8 is a function and 21 is c++ class method
-    if node.kind.value== 8 or node.kind.value==21:
-       if os.path.dirname(node.location.file.name.decode("utf8")) == relevant_folder:
+    if node.kind.value== 8 or node.kind.value==21 or node.kind.value==24 or node.kind.value==25:
+       if os.path.dirname(node.location.file.name) == relevant_folder:
          #print(node.location.file.name.decode("utf8"))         
          if lookfor_actionAnnotation_inNode(node,0):
             zoom_str='0'
@@ -105,11 +112,13 @@ def find_functions(node):
                zoom_str='1'  
                if lookfor_actionAnnotation_inNode(node,2):
                   zoom_str='2'
+                  if lookfor_actionAnnotation_inNode(node,3):
+                     zoom_str='3'
             classname = ''
-            if node.kind.name=='CXX_METHOD':
-               classname= str(node.semantic_parent.spelling.decode("utf-8"))+'::'
-            print('Found annotated method/function:', classname+node.displayname.decode("utf8"))
-            writefunc.write(node.get_usr().decode("utf8")+'\t'+zoom_str+'\t'+str(node.result_type.kind.name)+' '+classname+node.displayname.decode("utf8")+'\n')
+            if node.kind.name=='CXX_METHOD' or node.kind.name=='CONSTRUCTOR' or node.kind.name=='DESTRUCTOR':
+               classname= str(node.semantic_parent.spelling)+'::'
+            print('Found annotated method/function:', classname+node.displayname)
+            writefunc.write(node.get_usr()+'\t'+zoom_str+'\t'+str(node.result_type.kind.name)+' '+classname+node.displayname+'\n')
        return
 
   # Recurse for children of this node
@@ -124,8 +133,8 @@ args=["-Wall","-ansi"]
 if len(sys.argv)>=2:
    args+=sys.argv[2:]
 tu = index.parse(sys.argv[1],args)
-print ('Translation unit:', tu.spelling.decode("utf-8"))
-relevant_folder=os.path.dirname(tu.spelling.decode("utf-8"))
+print ('Translation unit:', tu.spelling)
+relevant_folder=os.path.dirname(tu.spelling)
 for diagnostic in tu.diagnostics:
   print(diagnostic)
 infile_str=os.path.splitext(os.path.basename(sys.argv[1]))[0]

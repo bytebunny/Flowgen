@@ -62,7 +62,8 @@ for row in reader:
       zoomID=''
       if i>0:
         zoomID=str(i)
-      htmloffline_str+="""
+      if i==0:
+        htmloffline_str+="""
         <li><a href="#view"""+zoomID+""" ">zoom"""+zoomID+"""</a></li>"""
 
       if i>0:
@@ -86,19 +87,20 @@ for row in reader:
       zoomID=''
       if i>0:
         zoomID=str(i)
-      htmloffline_str+="""
-        <div id="view"""+zoomID+""" ">"""
-      #if hyperlinks exist in the diagrams include them
-      if os.path.exists('flowdoc/aux_files/'+usr_key+zoomID+'.cmapx'):
-          htmloffline_str+= """<img src="aux_files/"""+usr_key+zoomID+""".png" """    
-          map_str=open('flowdoc/aux_files/'+usr_key+zoomID+'.cmapx').read()
-          htmloffline_str+=""" USEMAP="#"""+usr_key+zoomID+'_map'
-          htmloffline_str+=""""/> """   
-          htmloffline_str+=map_str+'\n'
-      else:
-          htmloffline_str+= """<img src="aux_files/"""+usr_key+zoomID+'.png'    
-          htmloffline_str+=""" "> """
-      htmloffline_str+="</div>"
+      if i==0:
+          htmloffline_str+="""
+            <div id="view"""+zoomID+""" ">"""
+          #if hyperlinks exist in the diagrams include them
+          if os.path.exists('flowdoc/aux_files/'+usr_key+zoomID+'.cmapx'):
+              htmloffline_str+= """<img src="aux_files/"""+usr_key+zoomID+""".png" """    
+              map_str=open('flowdoc/aux_files/'+usr_key+zoomID+'.cmapx').read()
+              htmloffline_str+=""" USEMAP="#"""+usr_key+zoomID+'_map'
+              htmloffline_str+=""""/> """   
+              htmloffline_str+=map_str+'\n'
+          else:
+              htmloffline_str+= """<img src="aux_files/"""+usr_key+zoomID+'.png'    
+              htmloffline_str+=""" "> """
+          htmloffline_str+="</div>"
 
       #print container diagrams
       if i>0:
